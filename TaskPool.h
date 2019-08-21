@@ -31,8 +31,9 @@ namespace taskpool
             const std::atomic<bool>& allTasksRunning
         );
         //WARNING: a task thread shall not be copied, but it needs to be defined manually due to requirements of std::vector
-        //however, any call to copy ctor IS AN ERRROR! 
-        //the vector is init in a stable way (reserved mem), so a reallocating will not happen, and hence copy/mov ctors will not be called
+        //however, any call to copy and move ctor IS AN ERROR! 
+        //the vector is init in a stable way (reserved mem), so reallocating will not happen, and hence copy/mov ctors will not be called
+        //this is not great and move with throw is problematic ... (maybe should have used another container in the first place)
         TaskThread(const TaskThread&)            { throw std::runtime_error("TaskThread is copied!"); };
         TaskThread& operator=(const TaskThread&) { throw std::runtime_error("TaskThread is copied!"); };
         TaskThread(TaskThread&&)                 { throw std::runtime_error("TaskThread is moved!");  };
@@ -45,7 +46,7 @@ namespace taskpool
 
         void setTaskFn(std::function<void()>& fn, const size_t repetition);
         auto getTaskFn() -> TaskFnDecl& { return m_taskFn; } 
-        
+
         bool join();
 
     private:
@@ -67,9 +68,9 @@ namespace taskpool
         ~TaskPool();
 
     public:
-        void stopAllTasks();  //should be used at the end of a second logging
+        void stopAllTasks();  
         bool startAllTasks(); //needs to be called continuously because it might not start (it will start when all tasks finished)
-        auto areTasksInProgress() const -> bool; //before starting a new second logging, check this for true!!!
+        auto areTasksInProgress() const -> bool; 
         void setTask(const size_t taskIndex, std::function<void()>& taskFn, const size_t repetition);
         auto size() const -> size_t { return m_taskThreads.size(); }
 
